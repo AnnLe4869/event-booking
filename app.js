@@ -5,16 +5,33 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+let events = [];
+
 app.use(
   "/graphql",
   graphqlHttp({
     graphiql: true,
     schema: buildSchema(`
+        type Event {
+          _id: ID!,
+          title: String!,
+          description: String!,
+          price: Float!,
+          date: String!
+        }
+
+        input EventInput {
+          title: String!,
+          description: String!,
+          price: Float!,
+          date: String
+        }
+
         type RootQuery {
-            events: [String!]!
+            events: [Event!]!
         }
         type RootMutation {
-            createEvent(name: String): String
+            createEvent(eventInput: EventInput): Event
         }
         schema {
             query: RootQuery
@@ -22,9 +39,19 @@ app.use(
         }
     `),
     rootValue: {
-      events: () => ["hello", "all night coding"],
-      createEvent: (args) => args.name,
+      events: () => events,
+      createEvent: ({ eventInput: { title, description, price, date } }) => {
+        const event = {
+          _id: Math.random(),
+          title: title,
+          description: description,
+          price: price,
+          date: date ? date : new Date().toISOString(),
+        };
+        events.push(event);
+        return event;
+      },
     },
   })
 );
-app.listen(3000, () => console.log("Listen kto port 3000"));
+app.listen(3000, () => console.log("Listen to port 3000"));
