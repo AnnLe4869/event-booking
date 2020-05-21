@@ -19,13 +19,15 @@ app.use(
           title: String!,
           description: String!,
           price: Float!,
-          date: String!
+          date: String!,
+          creator: User!
         }
 
         type User {
           _id: ID!,
           email: String!,
-          password: String
+          password: String,
+          createdEvents: [Event!]
         }
 
         input EventInput {
@@ -55,7 +57,12 @@ app.use(
     rootValue: {
       events: async () => {
         try {
-          return await Event.find();
+          const events = await Event.find().populate("creator");
+          const passwordRemovedEvents = events.map((event) => {
+            event.creator.password = null;
+            return event;
+          });
+          return passwordRemovedEvents;
         } catch (err) {
           console.error(err);
           throw err;
