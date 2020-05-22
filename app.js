@@ -14,8 +14,8 @@ const populateUser = async (userId) => {
     const user = await User.findById(userId);
     return {
       ...user._doc,
-      password: null,
-      createdEvents: await populateEvents(user.createdEvents),
+      password: () => "hello world",
+      createdEvents: await populateEvents.bind(this, user.createdEvents),
     };
   } catch (err) {
     console.error(err);
@@ -33,9 +33,10 @@ const populateEvents = async (eventIds) => {
     const populatedEvents = await Promise.all(
       events.map(async (event) => ({
         ...event._doc,
-        creator: await populateUser(event.creator),
+        creator: await populateUser.bind(this, event.creator),
       }))
     );
+    console.log(populatedEvents);
     return populatedEvents;
   } catch (err) {
     console.error(err);
