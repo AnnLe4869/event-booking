@@ -14,7 +14,7 @@ const populateUser = async (userId) => {
     const user = await User.findById(userId);
     return {
       ...user._doc,
-      password: () => "hello world",
+      password: null,
       createdEvents: populateEvents.bind(this, user.createdEvents),
     };
   } catch (err) {
@@ -119,7 +119,10 @@ app.use(
           user.createdEvents.push(createdEvent);
           await user.save();
 
-          return createdEvent;
+          return {
+            ...createdEvent._doc,
+            creator: populateUser.bind(this, user._id),
+          };
         } catch (err) {
           console.error(err);
           throw err;
