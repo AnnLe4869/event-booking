@@ -15,7 +15,7 @@ const populateUser = async (userId) => {
     return {
       ...user._doc,
       password: () => "hello world",
-      createdEvents: await populateEvents.bind(this, user.createdEvents),
+      createdEvents: populateEvents.bind(this, user.createdEvents),
     };
   } catch (err) {
     console.error(err);
@@ -30,13 +30,11 @@ const populateEvents = async (eventIds) => {
         $in: eventIds,
       },
     });
-    const populatedEvents = await Promise.all(
-      events.map(async (event) => ({
-        ...event._doc,
-        creator: await populateUser.bind(this, event.creator),
-      }))
-    );
-    console.log(populatedEvents);
+    const populatedEvents = events.map((event) => ({
+      ...event._doc,
+      creator: populateUser.bind(this, event.creator),
+    }));
+
     return populatedEvents;
   } catch (err) {
     console.error(err);
@@ -93,7 +91,7 @@ app.use(
       events: async () => {
         try {
           const events = await Event.find();
-          const populatedEvents = await populateEvents(
+          const populatedEvents = populateEvents(
             events.map((event) => event._id)
           );
 
