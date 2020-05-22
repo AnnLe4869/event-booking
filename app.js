@@ -9,13 +9,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const user = async (userId) => {
+const populateUser = async (userId) => {
   try {
     const user = await User.findById(userId);
     return {
       ...user._doc,
       password: null,
-      //createdEvents: await events(user.createdEvents),
+      createdEvents: await populateEvents(user.createdEvents),
     };
   } catch (err) {
     console.error(err);
@@ -23,14 +23,20 @@ const user = async (userId) => {
   }
 };
 
-const events = async (eventIds) => {
+const populateEvents = async (eventIds) => {
   try {
     const events = await Event.find({
       _id: {
         $in: eventIds,
       },
     });
-    return { ...events._doc };
+    const populatedEvents = await Promise.all(
+      events.map(async (event) => ({
+        ...event._doc,
+        creator: await populateUser(event.creator),
+      }))
+    );
+    return populatedEvents;
   } catch (err) {
     console.error(err);
     throw err;
@@ -86,11 +92,8 @@ app.use(
       events: async () => {
         try {
           const events = await Event.find();
-          const populatedEvents = await Promise.all(
-            events.map(async (event) => ({
-              ...event._doc,
-              creator: await user(event.creator),
-            }))
+          const populatedEvents = await populateEvents(
+            events.map((event) => event._id)
           );
 
           return populatedEvents;
