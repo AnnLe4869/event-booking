@@ -9,6 +9,34 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const user = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    return {
+      ...user._doc,
+      password: null,
+      //createdEvents: await events(user.createdEvents),
+    };
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+const events = async (eventIds) => {
+  try {
+    const events = await Event.find({
+      _id: {
+        $in: eventIds,
+      },
+    });
+    return { ...events._doc };
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
 app.use(
   "/graphql",
   graphqlHttp({
@@ -57,12 +85,15 @@ app.use(
     rootValue: {
       events: async () => {
         try {
-          const events = await Event.find().populate("creator");
-          const passwordRemovedEvents = events.map((event) => {
-            event.creator.password = null;
-            return event;
-          });
-          return passwordRemovedEvents;
+          const events = await Event.find();
+          const populatedEvents = await Promise.all(
+            events.map(async (event) => ({
+              ...event._doc,
+              creator: await user(event.creator),
+            }))
+          );
+
+          return populatedEvents;
         } catch (err) {
           console.error(err);
           throw err;
