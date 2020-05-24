@@ -1,7 +1,13 @@
 const bcrypt = require("bcryptjs");
 const User = require("../../models/user");
 const Event = require("../../models/event");
+const Booking = require("../../models/booking");
 
+/**
+ * Below we populate a user and array of events by recursive
+ * One user can create many events but one event can only have one creator
+ * The recursive is "control" by bind() and function-execute-on-call feature of GraphQL
+ */
 const populateUser = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -25,11 +31,26 @@ const populateEvents = async (eventIds) => {
     });
     const populatedEvents = events.map((event) => ({
       ...event._doc,
-      date: Date(event.date).toString(),
+      date: Date(event.date),
       creator: populateUser.bind(this, event.creator),
     }));
 
     return populatedEvents;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+// This function below is to populate a single event
+// We can use populateEvents function above with array of one ID, but just do like below make thing separately
+const populateSingleEvent = async (eventId) => {
+  try {
+    const event = await Event.findById(eventId);
+    return {
+      ...event._doc,
+      date: Date(event.date),
+      creator: populateUser.bind(this, event.creator),
+    };
   } catch (err) {
     console.error(err);
     throw err;
@@ -42,6 +63,19 @@ module.exports = {
       const events = await Event.find();
       const populatedEvents = populateEvents(events.map((event) => event._id));
       return populatedEvents;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+  bookings: async () => {
+    try {
+      const bookings = await Booking.find();
+      return bookings.map((booking) => ({
+        ...booking._doc,
+        event: populateSingleEvent.bind(this, booking.event),
+        user: populateUser.bind(this, booking.user),
+      }));
     } catch (err) {
       console.error(err);
       throw err;
@@ -89,6 +123,34 @@ module.exports = {
     } catch (err) {
       console.error(err);
       throw err; // This is needed so that the error message is displayed in GraphQL client
+    }
+  },
+  bookEvent: async ({ eventId }) => {
+    try {
+      const booking = new Booking({
+        event: eventId,
+        user: "5ec7b8ef0ad1ea2df5aaf72a",
+      });
+      const result = await booking.save();
+      return {
+        ...result._doc,
+        event: populateSingleEvent.bind(this, result.event),
+        user: populateUser.bind(this, result.user),
+        createdAt: Date(result.createdAt),
+        updatedAt: Date(result.updatedAt),
+      };
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  },
+  cancelBooking: async ({ bookingId }) => {
+    try {
+      const deletedBooking = await Booking.findByIdAndRemove(bookingId);
+      return populateSingleEvent(deletedBooking.event);
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   },
 };
