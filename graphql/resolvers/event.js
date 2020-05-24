@@ -14,7 +14,13 @@ module.exports = {
     }
   },
 
-  createEvent: async ({ eventInput: { title, description, price, date } }) => {
+  createEvent: async (
+    { eventInput: { title, description, price, date } },
+    req
+  ) => {
+    if (!req.isAuth) {
+      throw new Error("Unauthenticated");
+    }
     try {
       const event = new Event({
         title,
@@ -22,7 +28,7 @@ module.exports = {
         price,
         date: new Date(date),
       });
-      event.creator = "5ec62298041d321859216b30";
+      event.creator = req.userId;
       const createdEvent = await event.save();
 
       const user = await User.findById(createdEvent.creator);
