@@ -3,6 +3,19 @@ const User = require("../../models/user");
 const Event = require("../../models/event");
 const Booking = require("../../models/booking");
 
+const transformEvent = (event) => ({
+  ...event._doc,
+  date: Date(event.date),
+  creator: populateUser.bind(this, event.creator),
+});
+const transformBooking = (booking) => ({
+  ...booking._doc,
+  event: populateSingleEvent.bind(this, booking.event),
+  user: populateUser.bind(this, booking.user),
+  createdAt: Date(booking.createdAt),
+  updatedAt: Date(booking.updatedAt),
+});
+
 /**
  * Below we populate a user and array of events by recursive
  * One user can create many events but one event can only have one creator
@@ -29,13 +42,7 @@ const populateEvents = async (eventIds) => {
         $in: eventIds,
       },
     });
-    const populatedEvents = events.map((event) => ({
-      ...event._doc,
-      date: Date(event.date),
-      creator: populateUser.bind(this, event.creator),
-    }));
-
-    return populatedEvents;
+    return events.map((event) => transformEvent(event));
   } catch (err) {
     console.error(err);
     throw err;
@@ -46,11 +53,7 @@ const populateEvents = async (eventIds) => {
 const populateSingleEvent = async (eventId) => {
   try {
     const event = await Event.findById(eventId);
-    return {
-      ...event._doc,
-      date: Date(event.date),
-      creator: populateUser.bind(this, event.creator),
-    };
+    return transformEvent(event);
   } catch (err) {
     console.error(err);
     throw err;
@@ -71,11 +74,7 @@ module.exports = {
   bookings: async () => {
     try {
       const bookings = await Booking.find();
-      return bookings.map((booking) => ({
-        ...booking._doc,
-        event: populateSingleEvent.bind(this, booking.event),
-        user: populateUser.bind(this, booking.user),
-      }));
+      return bookings.map((booking) => transformBooking(booking));
     } catch (err) {
       console.error(err);
       throw err;
@@ -97,10 +96,7 @@ module.exports = {
       user.createdEvents.push(createdEvent);
       await user.save();
 
-      return {
-        ...createdEvent._doc,
-        creator: populateUser.bind(this, user._id),
-      };
+      return transformEvent(createdEvent);
     } catch (err) {
       console.error(err);
       throw err;
@@ -132,13 +128,7 @@ module.exports = {
         user: "5ec7b8ef0ad1ea2df5aaf72a",
       });
       const result = await booking.save();
-      return {
-        ...result._doc,
-        event: populateSingleEvent.bind(this, result.event),
-        user: populateUser.bind(this, result.user),
-        createdAt: Date(result.createdAt),
-        updatedAt: Date(result.updatedAt),
-      };
+      return transformBooking(result);
     } catch (err) {
       console.error(err);
       throw err;
