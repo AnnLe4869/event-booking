@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../../models/user");
 
 module.exports = {
@@ -19,6 +20,25 @@ module.exports = {
     } catch (err) {
       console.error(err);
       throw err; // This is needed so that the error message is displayed in GraphQL client
+    }
+  },
+  login: async ({ email, password }) => {
+    try {
+      const user = await User.findOne({ email });
+      if (!user) throw new Error("Your credentials are invalid");
+
+      const passwordCheckResult = await bcrypt.compare(password, user.password);
+      if (!passwordCheckResult) throw new Error("Your credentials are invalid");
+
+      const token = jwt.sign(
+        { userId: user._id, email },
+        "asecretthatcannotbeshared",
+        { expiresIn: "1h" }
+      );
+      return { userId: user._id, token, tokenExpiration: 1 };
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   },
 };
