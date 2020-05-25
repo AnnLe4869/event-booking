@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function Booking() {
-  return <div>Booking</div>;
+  return <h1>Booking</h1>;
 }
