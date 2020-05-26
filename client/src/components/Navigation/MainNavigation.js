@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavLink } from "react-router-dom";
 import "./MainNavigation.css";
+import AuthContext from "../../context/auth-context";
 
 export default function MainNavigation() {
+  const authContext = useContext(AuthContext);
   return (
     <header className="main-navigation">
       <div className="main-navigation__logo">
@@ -11,15 +13,19 @@ export default function MainNavigation() {
 
       <nav className="main-navigation__items">
         <ul>
-          <li>
-            <NavLink to="/auth">Authentication</NavLink>
-          </li>
+          {authContext.token ? null : (
+            <li>
+              <NavLink to="/auth">Authentication</NavLink>
+            </li>
+          )}
           <li>
             <NavLink to="/events">Events</NavLink>
           </li>
-          <li>
-            <NavLink to="/bookings">Bookings</NavLink>
-          </li>
+          {authContext.token ? (
+            <li>
+              <NavLink to="/bookings">Bookings</NavLink>
+            </li>
+          ) : null}
         </ul>
       </nav>
     </header>

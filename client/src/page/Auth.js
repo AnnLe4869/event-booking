@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { useHistory } from "react-router-dom";
 import "./Auth.css";
+import AuthContext from "../context/auth-context";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const authContext = useContext(AuthContext);
+  const history = useHistory();
 
   const inputHandler = (e) => {
     if (e.target.name === "email") setEmail(e.target.value);
@@ -55,8 +59,11 @@ export default function Auth() {
         },
       });
       const { data } = await response.json();
-      setEmail(null);
-      setPassword(null);
+      if (data.login.token) {
+        const { token, userId, tokenExpiration } = data.login;
+        authContext.login(token, userId, tokenExpiration);
+        history.push("/events");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -68,7 +75,7 @@ export default function Auth() {
         <div className="form-control">
           <label htmlFor="email">Email</label>
           <input
-            type="text"
+            type="email"
             name="email"
             id="email"
             onChange={inputHandler}
