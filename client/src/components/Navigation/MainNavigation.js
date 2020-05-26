@@ -22,9 +22,14 @@ export default function MainNavigation() {
             <NavLink to="/events">Events</NavLink>
           </li>
           {authContext.token ? (
-            <li>
-              <NavLink to="/bookings">Bookings</NavLink>
-            </li>
+            <>
+              <li>
+                <NavLink to="/bookings">Bookings</NavLink>
+              </li>
+              <li>
+                <button onClick={authContext.logout}>Log out</button>
+              </li>
+            </>
           ) : null}
         </ul>
       </nav>
