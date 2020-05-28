@@ -58,6 +58,11 @@ export default function Auth() {
           "Content-Type": "application/json",
         },
       });
+      if (response.status !== 200 && response.status !== 201) {
+        setEmail("");
+        setPassword("");
+        throw new Error("Your credentials are invalid");
+      }
       const { data } = await response.json();
       if (data.login.token) {
         const { token, userId, tokenExpiration } = data.login;
@@ -66,6 +71,7 @@ export default function Auth() {
       }
     } catch (err) {
       console.error(err);
+      //throw err;
     }
   };
 
