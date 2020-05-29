@@ -51,7 +51,7 @@ export default function Auth() {
     }
 
     try {
-      const response = await fetch("/graphql", {
+      const response = await fetch("http://localhost:8000/graphql", {
         method: "POST",
         body: JSON.stringify(requestBody),
         headers: {

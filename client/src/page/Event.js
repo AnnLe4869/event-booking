@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 
 import AuthContext from "../context/auth-context";
@@ -17,6 +17,49 @@ export default function Event() {
     date: "",
     description: "",
   });
+  const [items, setItems] = useState([]);
+
+  async function fetchData() {
+    const requestBody = {
+      query: `
+          query {
+              events {
+                _id,
+                title,
+                description,
+                date,
+                price,
+                creator {
+                  email
+                }
+              }
+          }
+      `,
+    };
+    try {
+      const response = await fetch("http://localhost:8000/graphql", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error("Something is wrong while fetching data");
+      }
+      const {
+        data: { events },
+      } = await response.json();
+      setItems([...events]);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const startCreatingEventHandler = () => {
     if (!authContext.token) {
       return history.push("/auth");
@@ -66,7 +109,7 @@ export default function Event() {
     };
     // Send the request for creating the event
     try {
-      const response = await fetch("/graphql", {
+      const response = await fetch("http://localhost:8000/graphql", {
         method: "POST",
         body: JSON.stringify(requestBody),
         headers: {
@@ -77,8 +120,8 @@ export default function Event() {
       if (response.status !== 200 && response.status !== 201) {
         throw new Error("Something is wrong with the process");
       }
-      const data = await response.json();
-      console.log(data);
+      await response.json();
+      await fetchData();
       setCreating(false);
     } catch (err) {
       console.error(err);
@@ -153,6 +196,13 @@ export default function Event() {
           </button>
         </div>
       ) : null}
+      <ul className="events__list">
+        {items.map(({ _id, title, date, description, price }) => (
+          <li key={_id} className="events__list-item">
+            {title}
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
