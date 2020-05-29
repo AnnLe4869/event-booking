@@ -32,6 +32,7 @@ export default function Event() {
                 date,
                 price,
                 creator {
+                  _id
                   email
                 }
               }
@@ -101,11 +102,11 @@ export default function Event() {
             date: "${date}",
             description: "${description}"
           }){
+            _id,
             title,
             date,
-            creator {
-              email
-            }
+            price, 
+            description
           }
         }
       `,
@@ -123,8 +124,11 @@ export default function Event() {
       if (response.status !== 200 && response.status !== 201) {
         throw new Error("Something is wrong with the process");
       }
-      await response.json();
-      await fetchData();
+      const { data } = await response.json();
+      setItems([
+        ...items,
+        { ...data.createEvent, creator: { _id: authContext.userId } },
+      ]);
       setCreating(false);
     } catch (err) {
       console.error(err);
