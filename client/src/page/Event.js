@@ -19,6 +19,7 @@ export default function Event() {
   });
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const authContext = useContext(AuthContext);
   const history = useHistory();
@@ -148,10 +149,21 @@ export default function Event() {
     }
   };
 
-  const modalCancelHandler = () => setCreating(false);
+  const modalCancelHandler = () => {
+    setCreating(false);
+    setSelectedEvent(null);
+  };
+
+  const showItemDetailHandler = (eventId) => {
+    console.log(eventId);
+    const event = items.find((item) => item._id === eventId);
+    setSelectedEvent(event);
+  };
+  const bookEventHandler = () => {};
 
   return (
     <>
+      {/* Form for creating new event */}
       {creating ? (
         <>
           <Backdrop></Backdrop>
@@ -161,6 +173,7 @@ export default function Event() {
             canCancel={true}
             onCancel={modalCancelHandler}
             onConfirm={modalConfirmHandler}
+            confirmText="Add"
           >
             <form>
               <div className="form-control">
@@ -208,6 +221,30 @@ export default function Event() {
           </Modal>
         </>
       ) : null}
+
+      {/* Form for view detail of an event and booking an event */}
+      {selectedEvent && (
+        <>
+          <Backdrop></Backdrop>
+          <Modal
+            title={selectedEvent.title}
+            canConfirm
+            canCancel
+            onCancel={modalCancelHandler}
+            onConfirm={bookEventHandler}
+            confirmText="Book"
+          >
+            <h1>{selectedEvent.title}</h1>
+            <h2>
+              ${selectedEvent.price} -{" "}
+              {new Date(selectedEvent.date).toLocaleDateString()}
+            </h2>
+            <p>{selectedEvent.description}</p>
+          </Modal>
+        </>
+      )}
+
+      {/* Only when user log in can they create new event */}
       {authContext.token ? (
         <div className="events-control">
           <p>Share your own event!</p>
@@ -216,7 +253,15 @@ export default function Event() {
           </button>
         </div>
       ) : null}
-      {isLoading ? <Spinner></Spinner> : <EventList items={items}></EventList>}
+      {/* Spinner when user submit log in credentials */}
+      {isLoading ? (
+        <Spinner></Spinner>
+      ) : (
+        <EventList
+          items={items}
+          onViewDetail={showItemDetailHandler}
+        ></EventList>
+      )}
     </>
   );
 }
