@@ -56,7 +56,7 @@ export default function Event() {
             description: "${description}"
           }){
             title,
-            date.
+            date,
             creator {
               email
             }
@@ -88,7 +88,7 @@ export default function Event() {
 
   const modalCancelHandler = () => setCreating(false);
   return (
-    <div className="events-control">
+    <>
       {creating ? (
         <>
           <Backdrop></Backdrop>
@@ -145,10 +145,14 @@ export default function Event() {
           </Modal>
         </>
       ) : null}
-      <p>Share your own event!</p>
-      <button className="btn" onClick={startCreatingEventHandler}>
-        Create event
-      </button>
-    </div>
+      {authContext.token ? (
+        <div className="events-control">
+          <p>Share your own event!</p>
+          <button className="btn" onClick={startCreatingEventHandler}>
+            Create event
+          </button>
+        </div>
+      ) : null}
+    </>
   );
 }
