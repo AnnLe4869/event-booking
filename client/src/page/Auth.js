@@ -2,11 +2,13 @@ import React, { useState, useContext } from "react";
 import { useHistory } from "react-router-dom";
 import "./Auth.css";
 import AuthContext from "../context/auth-context";
+import Spinner from "../components/Spinner/Spinner";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const authContext = useContext(AuthContext);
   const history = useHistory();
 
@@ -19,6 +21,7 @@ export default function Auth() {
   };
   const submitHandler = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     if (email.trim().length === 0 || password.trim().length === 0) {
       return;
     }
@@ -64,6 +67,7 @@ export default function Auth() {
         throw new Error("Your credentials are invalid");
       }
       const { data } = await response.json();
+      setIsLoading(false);
       if (data.login.token) {
         const { token, userId, tokenExpiration } = data.login;
         authContext.login(token, userId, tokenExpiration);
@@ -71,12 +75,14 @@ export default function Auth() {
       }
     } catch (err) {
       console.error(err);
+      setIsLoading(false);
       //throw err;
     }
   };
 
   return (
     <>
+      {isLoading ? <Spinner></Spinner> : null}
       <form className="auth-form" onSubmit={submitHandler}>
         <div className="form-control">
           <label htmlFor="email">Email</label>

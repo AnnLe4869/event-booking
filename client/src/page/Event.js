@@ -7,12 +7,10 @@ import AuthContext from "../context/auth-context";
 import Modal from "../components/Modal/Modal";
 import Backdrop from "../components/Backdrop/Backdrop";
 import EventList from "../components/Event/EventList/EventList";
+import Spinner from "../components/Spinner/Spinner";
 
 export default function Event() {
   const [creating, setCreating] = useState(false);
-  const authContext = useContext(AuthContext);
-  const history = useHistory();
-
   const [input, setInput] = useState({
     title: "",
     price: "",
@@ -20,8 +18,13 @@ export default function Event() {
     description: "",
   });
   const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const authContext = useContext(AuthContext);
+  const history = useHistory();
 
   async function fetchData() {
+    setIsLoading(true);
     const requestBody = {
       query: `
           query {
@@ -54,8 +57,10 @@ export default function Event() {
         data: { events },
       } = await response.json();
       setItems([...events]);
+      setIsLoading(false);
     } catch (err) {
       console.error(err);
+      setIsLoading(false);
       history.go("/auth");
     }
   }
@@ -70,12 +75,14 @@ export default function Event() {
     }
     setCreating(!creating);
   };
+
   const modalInputHandler = (e) => {
     setInput({
       ...input,
       [e.target.name]: e.target.value,
     });
   };
+
   const modalConfirmHandler = async () => {
     // Check the input if null input reject
     const { title, price, description, date } = input;
@@ -111,8 +118,10 @@ export default function Event() {
         }
       `,
     };
-    // Send the request for creating the event
+    setIsLoading(true);
+
     try {
+      // Send the request for creating the event
       const response = await fetch("http://localhost:8000/graphql", {
         method: "POST",
         body: JSON.stringify(requestBody),
@@ -124,19 +133,23 @@ export default function Event() {
       if (response.status !== 200 && response.status !== 201) {
         throw new Error("Something is wrong with the process");
       }
+      // If request success get the data from that and add to list of current items without another fetch
       const { data } = await response.json();
       setItems([
         ...items,
         { ...data.createEvent, creator: { _id: authContext.userId } },
       ]);
+      setIsLoading(false);
       setCreating(false);
     } catch (err) {
       console.error(err);
+      setIsLoading(false);
       //throw err;
     }
   };
 
   const modalCancelHandler = () => setCreating(false);
+
   return (
     <>
       {creating ? (
@@ -203,7 +216,7 @@ export default function Event() {
           </button>
         </div>
       ) : null}
-      <EventList items={items}></EventList>
+      {isLoading ? <Spinner></Spinner> : <EventList items={items}></EventList>}
     </>
   );
 }
