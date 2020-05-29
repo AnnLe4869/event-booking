@@ -1,10 +1,12 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 
-import AuthContext from "../context/auth-context";
 import "./Event.css";
+
+import AuthContext from "../context/auth-context";
 import Modal from "../components/Modal/Modal";
 import Backdrop from "../components/Backdrop/Backdrop";
+import EventList from "../components/Event/EventList/EventList";
 
 export default function Event() {
   const [creating, setCreating] = useState(false);
@@ -53,6 +55,7 @@ export default function Event() {
       setItems([...events]);
     } catch (err) {
       console.error(err);
+      history.go("/auth");
     }
   }
 
@@ -136,7 +139,7 @@ export default function Event() {
         <>
           <Backdrop></Backdrop>
           <Modal
-            title="Add event"
+            title="Add new event"
             canConfirm={true}
             canCancel={true}
             onCancel={modalCancelHandler}
@@ -196,13 +199,7 @@ export default function Event() {
           </button>
         </div>
       ) : null}
-      <ul className="events__list">
-        {items.map(({ _id, title, date, description, price }) => (
-          <li key={_id} className="events__list-item">
-            {title}
-          </li>
-        ))}
-      </ul>
+      <EventList items={items}></EventList>
     </>
   );
 }
