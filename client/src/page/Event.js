@@ -20,6 +20,7 @@ export default function Event() {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isActive, setIsActive] = useState(true);
 
   const authContext = useContext(AuthContext);
   const history = useHistory();
@@ -52,22 +53,26 @@ export default function Event() {
         },
       });
       if (response.status !== 200 && response.status !== 201) {
-        throw new Error("Something is wrong while fetching data");
+        throw new Error("Something is wrong while fetching events");
       }
       const {
         data: { events },
       } = await response.json();
-      setItems([...events]);
-      setIsLoading(false);
+      if (isActive) {
+        setItems([...events]);
+        setIsLoading(false);
+      }
     } catch (err) {
       console.error(err);
-      setIsLoading(false);
+
+      if (isActive) setIsLoading(false);
       history.go("/auth");
     }
   }
 
   useEffect(() => {
     fetchData();
+    return () => setIsActive(false);
   }, []);
 
   const startCreatingEventHandler = () => {
