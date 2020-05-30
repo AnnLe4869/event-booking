@@ -155,11 +155,49 @@ export default function Event() {
   };
 
   const showItemDetailHandler = (eventId) => {
-    console.log(eventId);
     const event = items.find((item) => item._id === eventId);
     setSelectedEvent(event);
   };
-  const bookEventHandler = () => {};
+
+  const bookEventHandler = async () => {
+    const requestBody = {
+      query: `
+          mutation {
+              bookEvent (eventId: "${selectedEvent._id}") {
+                _id,
+                createdAt,
+                updatedAt
+              }
+          }
+      `,
+    };
+    // Check authentication
+    const { token } = authContext;
+    if (!token) {
+      setSelectedEvent(null);
+      history.push("/auth");
+    }
+    try {
+      const response = await fetch("http://localhost:8000/graphql", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error("Something is wrong while booking event");
+      }
+      const {
+        data: { bookEvent },
+      } = await response.json();
+      setSelectedEvent(null);
+    } catch (err) {
+      console.error(err);
+      history.go("/auth");
+    }
+  };
 
   return (
     <>
@@ -232,7 +270,7 @@ export default function Event() {
             canCancel
             onCancel={modalCancelHandler}
             onConfirm={bookEventHandler}
-            confirmText="Book"
+            confirmText={authContext.token ? "Book" : "Confirm"}
           >
             <h1>{selectedEvent.title}</h1>
             <h2>
@@ -253,7 +291,7 @@ export default function Event() {
           </button>
         </div>
       ) : null}
-      {/* Spinner when user submit log in credentials */}
+      {/* Spinner when user submit an event */}
       {isLoading ? (
         <Spinner></Spinner>
       ) : (
