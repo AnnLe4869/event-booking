@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 
 import AuthContext from "../context/auth-context";
 import Spinner from "../components/Spinner/Spinner";
+import BookingList from "../components/Booking/BookingList/BookingList";
 
 export default function Booking() {
   const [bookings, setBookings] = useState([]);
@@ -63,19 +64,55 @@ export default function Booking() {
     };
   }, []);
 
+  const deleteBookingHandler = async (bookingId) => {
+    setIsLoading(true);
+    const requestBody = {
+      query: `
+          mutation {
+              cancelBooking (bookingId: "${bookingId}") {
+                _id,
+                title
+              }
+          }
+      `,
+    };
+    const { token } = authContext;
+    try {
+      const response = await fetch("http://localhost:8000/graphql", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error("Something is wrong while deleting bookings");
+      }
+      const {
+        data: { cancelBooking },
+      } = await response.json();
+      setBookings([...bookings.filter((booking) => booking._id !== bookingId)]);
+      if (isActive) {
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      if (isActive) {
+        setIsLoading(false);
+      }
+    }
+  };
+
   return (
     <>
       {isLoading ? (
         <Spinner></Spinner>
       ) : (
-        <ul>
-          {bookings.map((booking) => (
-            <li key={booking._id}>
-              {booking.event.title}-
-              {new Date(booking.event.date).toLocaleDateString()}
-            </li>
-          ))}
-        </ul>
+        <BookingList
+          bookings={bookings}
+          onDelete={deleteBookingHandler}
+        ></BookingList>
       )}
     </>
   );

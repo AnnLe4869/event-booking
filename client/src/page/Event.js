@@ -66,7 +66,7 @@ export default function Event() {
       console.error(err);
 
       if (isActive) setIsLoading(false);
-      history.go("/auth");
+      ///history.go("/auth");
     }
   }
 
