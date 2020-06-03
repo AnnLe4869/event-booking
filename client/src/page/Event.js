@@ -108,12 +108,12 @@ export default function Event() {
     // If user already authenticate, process to build the request body
     const requestBody = {
       query: `
-        mutation {
+        mutation CreateEvent ($title: String!, $price: Float!, $date: String!, $description: String!){
           createEvent (eventInput: {
-            title: "${title}",
-            price: ${parseFloat(price)},
-            date: "${date}",
-            description: "${description}"
+            title: $title,
+            price: $price,
+            date: $date,
+            description: $description
           }){
             _id,
             title,
@@ -123,6 +123,12 @@ export default function Event() {
           }
         }
       `,
+      variables: {
+        title,
+        price: parseFloat(price),
+        date,
+        description,
+      },
     };
     setIsLoading(true);
 
@@ -167,14 +173,17 @@ export default function Event() {
   const bookEventHandler = async () => {
     const requestBody = {
       query: `
-          mutation {
-              bookEvent (eventId: "${selectedEvent._id}") {
+          mutation BookEvent ($id: ID!){
+              bookEvent (eventId: $id) {
                 _id,
                 createdAt,
                 updatedAt
               }
           }
       `,
+      variables: {
+        id: selectedEvent._id,
+      },
     };
     // Check authentication
     const { token } = authContext;
