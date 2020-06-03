@@ -5,13 +5,14 @@ const Event = require("../../models/event");
 const eventLoader = new DataLoader((eventIds) => {
   return populateEvents(eventIds);
 });
-const userLoader = new DataLoader((userIds) =>
-  User.find({
+const userLoader = new DataLoader((userIds) => {
+  console.log(userIds);
+  return User.find({
     _id: {
       $in: userIds,
     },
-  })
-);
+  });
+});
 
 /**
  * Below we populate a user and array of events by recursive
@@ -19,9 +20,8 @@ const userLoader = new DataLoader((userIds) =>
  * The recursive is "control" by bind() and function-execute-on-call feature of GraphQL
  */
 const populateUser = async (userId) => {
-  console.log(userId);
   try {
-    const user = await userLoader.load(userId);
+    const user = await userLoader.load(userId.toString());
     return {
       ...user._doc,
       password: null,
@@ -52,7 +52,7 @@ const populateEvents = async (eventIds) => {
 // We can use populateEvents function above with array of one ID, but just do like below make thing separately
 const populateSingleEvent = async (eventId) => {
   try {
-    const event = await eventLoader.load(eventId);
+    const event = await eventLoader.load(eventId.toString());
     return transformEvent(event);
   } catch (err) {
     console.error(err);
