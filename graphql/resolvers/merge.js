@@ -6,7 +6,6 @@ const eventLoader = new DataLoader((eventIds) => {
   return populateEvents(eventIds);
 });
 const userLoader = new DataLoader((userIds) => {
-  console.log(userIds);
   return User.find({
     _id: {
       $in: userIds,
@@ -53,7 +52,7 @@ const populateEvents = async (eventIds) => {
 const populateSingleEvent = async (eventId) => {
   try {
     const event = await eventLoader.load(eventId.toString());
-    return transformEvent(event);
+    return event;
   } catch (err) {
     console.error(err);
     throw err;
