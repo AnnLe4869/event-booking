@@ -14,8 +14,8 @@ import Navigation from "./components/Navigation/MainNavigation";
 import AuthContext from "./context/auth-context";
 
 function App() {
-  const [token, setToken] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [userId, setUserId] = useState(localStorage.getItem("userId"));
   const login = (token, userId, _) => {
     setToken(token);
     setUserId(userId);
@@ -33,12 +33,8 @@ function App() {
       <>
         <AuthContext.Provider
           value={{
-            token: localStorage.getItem("token")
-              ? localStorage.getItem("token")
-              : token,
-            userId: localStorage.getItem("userId")
-              ? localStorage.getItem("userId")
-              : userId,
+            token,
+            userId,
             login,
             logout,
           }}
@@ -47,7 +43,7 @@ function App() {
 
           <main className="main-content">
             <Switch>
-              {(!token || !localStorage.getItem("token")) && (
+              {!token && (
                 <Route path="/auth">
                   <Auth></Auth>
                 </Route>
@@ -55,14 +51,12 @@ function App() {
               <Route path="/events">
                 <Event></Event>
               </Route>
-              {(token || localStorage.getItem("token")) && (
+              {token && (
                 <Route path="/bookings">
                   <Booking></Booking>
                 </Route>
               )}
-              {(!token || !localStorage.getItem("token")) && (
-                <Redirect to="/auth"></Redirect>
-              )}
+              {!token && <Redirect to="/auth"></Redirect>}
             </Switch>
           </main>
         </AuthContext.Provider>
