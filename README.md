@@ -10,11 +10,11 @@ This project was created with NodeJS, MongoDB, GraphQL and React
 
 ## Features
 
--User can create new user or log into existing user
--User can create new event
--User can view event create by other people
--User can book an event created by other people
--User can cancel a booking
+- User can create new user or log into existing user
+- User can create new event
+- User can view event create by other people
+- User can book an event created by other people
+- User can cancel a booking
 
 ## Todos
 
