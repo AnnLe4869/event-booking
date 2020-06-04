@@ -76,7 +76,11 @@ export default function Auth() {
       }
       const { data } = await response.json();
       setIsLoading(false);
-      if (data.login.token) {
+      setEmail("");
+      setPassword("");
+      if (!data.hasOwnProperty("login")) setIsLogin(true);
+
+      if (data.hasOwnProperty("login") && data.login.token) {
         const { token, userId, tokenExpiration } = data.login;
         authContext.login(token, userId, tokenExpiration);
         history.push("/events");
