@@ -40,6 +40,12 @@ const populateEvents = async (eventIds) => {
         $in: eventIds,
       },
     });
+    // We have to sort here because $in doesn't guarantee the order of the resulting array
+    events.sort((a, b) => {
+      return (
+        eventIds.indexOf(a._id.toString()) - eventIds.indexOf(b._id.toString())
+      );
+    });
     return events.map((event) => transformEvent(event));
   } catch (err) {
     console.log("Error in populating event");
