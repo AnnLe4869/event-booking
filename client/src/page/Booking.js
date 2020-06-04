@@ -4,15 +4,25 @@ import { useHistory } from "react-router-dom";
 import AuthContext from "../context/auth-context";
 import Spinner from "../components/Spinner/Spinner";
 import BookingList from "../components/Booking/BookingList/BookingList";
+import BookingChart from "../components/Booking/BookingChart/BookingChart";
+import BookingControl from "../components/Booking/BookingControl/BookingControl";
 
 export default function Booking() {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const [outputType, setOutputType] = useState("list");
   const history = useHistory();
   const authContext = useContext(AuthContext);
 
-  async function fetchData() {
+  useEffect(() => {
+    fetchData();
+    return () => {
+      setIsActive(false);
+    };
+  }, []);
+
+  const fetchData = async () => {
     setIsLoading(true);
     const requestBody = {
       query: `
@@ -56,13 +66,7 @@ export default function Booking() {
       }
       history.go("/auth");
     }
-  }
-  useEffect(() => {
-    fetchData();
-    return () => {
-      setIsActive(false);
-    };
-  }, []);
+  };
 
   const deleteBookingHandler = async (bookingId) => {
     setIsLoading(true);
@@ -92,9 +96,7 @@ export default function Booking() {
       if (response.status !== 200 && response.status !== 201) {
         throw new Error("Something is wrong while deleting bookings");
       }
-      const {
-        data: { cancelBooking },
-      } = await response.json();
+      await response.json();
       setBookings([...bookings.filter((booking) => booking._id !== bookingId)]);
       if (isActive) {
         setIsLoading(false);
@@ -107,16 +109,30 @@ export default function Booking() {
     }
   };
 
-  return (
-    <>
-      {isLoading ? (
-        <Spinner></Spinner>
-      ) : (
-        <BookingList
-          bookings={bookings}
-          onDelete={deleteBookingHandler}
-        ></BookingList>
-      )}
-    </>
-  );
+  const changeOutputTypeHandler = (outputType) => {
+    setOutputType(outputType);
+  };
+
+  let content = <Spinner></Spinner>;
+  if (!isLoading) {
+    content = (
+      <React.Fragment>
+        <BookingControl
+          activeOutputType={outputType}
+          onChange={changeOutputTypeHandler}
+        ></BookingControl>
+        <div>
+          {outputType === "list" ? (
+            <BookingList
+              bookings={bookings}
+              onDelete={deleteBookingHandler}
+            ></BookingList>
+          ) : (
+            <BookingChart bookings={bookings}></BookingChart>
+          )}
+        </div>
+      </React.Fragment>
+    );
+  }
+  return <>{content}</>;
 }
