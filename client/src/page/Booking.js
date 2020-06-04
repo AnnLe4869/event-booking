@@ -33,7 +33,8 @@ export default function Booking() {
                 event {
                   _id, 
                   title,
-                  date
+                  date,
+                  price
                 }
               }
           }
