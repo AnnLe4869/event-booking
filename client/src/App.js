@@ -19,8 +19,12 @@ function App() {
   const login = (token, userId, _) => {
     setToken(token);
     setUserId(userId);
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", userId);
   };
   const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
     setToken(null);
     setUserId(null);
   };
@@ -29,8 +33,12 @@ function App() {
       <>
         <AuthContext.Provider
           value={{
-            token,
-            userId,
+            token: localStorage.getItem("token")
+              ? localStorage.getItem("token")
+              : token,
+            userId: localStorage.getItem("userId")
+              ? localStorage.getItem("userId")
+              : userId,
             login,
             logout,
           }}
@@ -39,7 +47,7 @@ function App() {
 
           <main className="main-content">
             <Switch>
-              {!token && (
+              {(!token || !localStorage.getItem("token")) && (
                 <Route path="/auth">
                   <Auth></Auth>
                 </Route>
@@ -47,12 +55,14 @@ function App() {
               <Route path="/events">
                 <Event></Event>
               </Route>
-              {token && (
+              {(token || localStorage.getItem("token")) && (
                 <Route path="/bookings">
                   <Booking></Booking>
                 </Route>
               )}
-              {!token && <Redirect to="/auth"></Redirect>}
+              {(!token || !localStorage.getItem("token")) && (
+                <Redirect to="/auth"></Redirect>
+              )}
             </Switch>
           </main>
         </AuthContext.Provider>
